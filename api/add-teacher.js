@@ -2,9 +2,11 @@ const admin = require("firebase-admin");
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(
-      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    )
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    }),
   });
 }
 
@@ -18,11 +20,12 @@ module.exports = async function handler(req, res) {
   try {
     const docRef = await db.collection("teachers").add({
       ...req.body,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
 
     return res.status(200).json({ id: docRef.id });
   } catch (error) {
+    console.error("FIREBASE ERROR:", error);
     return res.status(500).json({ error: error.message });
   }
 };
